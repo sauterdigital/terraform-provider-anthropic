@@ -1,6 +1,7 @@
 # terraform-provider-anthropic
 
 [![ci](https://github.com/sauterdigital/terraform-provider-anthropic/actions/workflows/ci.yml/badge.svg)](https://github.com/sauterdigital/terraform-provider-anthropic/actions/workflows/ci.yml)
+[![license](https://img.shields.io/badge/license-MPL--2.0-blue.svg)](./LICENSE)
 
 Terraform provider for the [Anthropic Admin API](https://platform.claude.com/docs/en/api/admin). Manages workspaces, API keys, organization and workspace members, invites, CMEK external keys, and exposes usage / cost / Claude Code reports as data sources for FinOps pipelines.
 
@@ -118,4 +119,4 @@ Then `make install` and run `terraform plan` against `examples/`.
 
 ## License
 
-TBD — see `LICENSE` once finalized.
+[Mozilla Public License 2.0](./LICENSE) — the standard for HashiCorp-ecosystem Terraform providers.
