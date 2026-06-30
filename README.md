@@ -3,9 +3,9 @@
 [![ci](https://github.com/sauterdigital/terraform-provider-anthropic/actions/workflows/ci.yml/badge.svg)](https://github.com/sauterdigital/terraform-provider-anthropic/actions/workflows/ci.yml)
 [![license](https://img.shields.io/badge/license-MPL--2.0-blue.svg)](./LICENSE)
 
-Terraform provider for the [Anthropic Admin API](https://platform.claude.com/docs/en/api/admin). Manages workspaces, API keys, organization and workspace members, invites, CMEK external keys, and exposes usage / cost / Claude Code reports as data sources for FinOps pipelines.
+Terraform provider for the [Anthropic Admin API](https://platform.claude.com/docs/en/api/admin). Manages workspaces, API keys, organization and workspace members, invites, CMEK external keys, **service accounts** (OAuth Bearer), **federation issuers + rules** (workload identity federation), **spend limits**, **MCP tunnel certificates** (beta), and exposes the full analytics surface (token usage, cost, Claude Code, Skills, Connectors, Chat Projects, per-user breakdowns) as data sources for FinOps pipelines.
 
-Covers **every documented Admin API endpoint** except MCP Tunnels (beta, uses a different auth model).
+Covers **every documented Admin API endpoint**: 14 resources + 37 data sources spanning ~80 endpoints across 15 endpoint groups.
 
 ## Why this provider
 
@@ -52,7 +52,9 @@ The admin key is distinct from regular Claude API keys — generate it in the An
 
 ## What's included
 
-**6 resources**
+**14 resources**
+
+Authenticated with `admin_api_key` (x-api-key):
 
 | Resource | Notes |
 |---|---|
@@ -62,12 +64,30 @@ The admin key is distinct from regular Claude API keys — generate it in the An
 | `anthropic_invite` | Immutable after create — changes to email/role force replacement. |
 | `anthropic_organization_member` | Set org role for an existing user (joined via accepted invite). |
 | `anthropic_external_key` | CMEK config CRUD + validate, polymorphic across AWS / GCP / Azure. |
+| `anthropic_spend_limit` | Per-user spend limit override (org/group/seat-tier limits stay in Console). |
+| `anthropic_spend_limit_increase_decision` | Approve or deny a user's request to raise their cap. |
 
-**18 data sources**
+Require `oauth_token` (Bearer auth) — Admin API keys are rejected:
+
+| Resource | Notes |
+|---|---|
+| `anthropic_service_account` | Named non-human identity for federation. `admin`-role creation needs interactive credential. |
+| `anthropic_service_account_workspace` | Assigns an SA to a workspace with a role. |
+| `anthropic_federation_issuer` | OIDC issuer registration (GitHub Actions, GitLab, etc). Polymorphic JWKS source. |
+| `anthropic_federation_rule` | Workload identity federation rule binding OIDC claims to an SA. |
+| `anthropic_federation_rule_workspace` | Extends a rule to an additional workspace. |
+| `anthropic_tunnel_certificate` | MCP tunnel CA certificate (beta, `mcp-tunnels-2026-05-19` header added automatically). |
+
+**37 data sources**
 
 - Identity & membership: `anthropic_organization`, `anthropic_workspace[s]`, `anthropic_workspace_member[s]`, `anthropic_organization_member[s]`, `anthropic_invite[s]`
 - Keys / CMEK: `anthropic_api_key[s]`, `anthropic_external_key[s]`
-- Operational: `anthropic_organization_rate_limits`, `anthropic_workspace_rate_limits`, `anthropic_usage_report`, `anthropic_claude_code_usage_report`, `anthropic_cost_report`
+- Operational: `anthropic_organization_rate_limits`, `anthropic_workspace_rate_limits`
+- FinOps reports: `anthropic_usage_report`, `anthropic_claude_code_usage_report`, `anthropic_cost_report`
+- FinOps automation: `anthropic_effective_spend_limits`, `anthropic_spend_limit_increase_request[s]`
+- Analytics v2 (Enterprise + `read:analytics` scope): `anthropic_activity_summaries`, `anthropic_token_usage_over_time`, `anthropic_per_user_token_usage`, `anthropic_cost_over_time`, `anthropic_per_user_cost`, `anthropic_user_activity`, `anthropic_skills_usage`, `anthropic_connectors_usage`, `anthropic_chat_projects_usage`
+- Service accounts (Bearer auth): `anthropic_service_account[s]`, `anthropic_service_account_workspaces`, `anthropic_workspace_service_accounts`
+- MCP Tunnels (Bearer + beta): `anthropic_tunnel[s]`, `anthropic_tunnel_certificates`
 
 Full schema reference: [`docs/`](./docs).
 
@@ -75,10 +95,11 @@ Full schema reference: [`docs/`](./docs).
 
 | Argument | Env var | Description |
 |---|---|---|
-| `admin_api_key` | `ANTHROPIC_ADMIN_API_KEY` | Required. Admin API key (distinct from regular API keys). |
+| `admin_api_key` | `ANTHROPIC_ADMIN_API_KEY` | Admin API key (`sk-ant-admin-...`). Used as `x-api-key` header. Required for most endpoints. |
+| `oauth_token` | `ANTHROPIC_OAUTH_TOKEN` | OAuth Bearer token (user OAuth or WIF-minted SA token). **Required** for Service Accounts, Federation, and MCP Tunnels (which reject Admin API keys). When set, Bearer auth is used for ALL requests. |
 | `base_url` | — | Optional. Defaults to `https://api.anthropic.com`. Override for staging or mock servers. |
 
-Every request sets `anthropic-version: 2023-06-01` and a provider-versioned `User-Agent`. HTTP 429 responses are retried with exponential backoff (capped at 30s), honoring `Retry-After` when present.
+At least one of `admin_api_key` or `oauth_token` must be set. When both are configured the client uses Bearer (the doc's modern preferred pattern). Every request sets `anthropic-version: 2023-06-01` and a provider-versioned `User-Agent`. HTTP 429 responses are retried with exponential backoff (capped at 30s), honoring `Retry-After` when present.
 
 ## Development
 

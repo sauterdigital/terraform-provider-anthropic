@@ -27,7 +27,8 @@ const (
 
 type Client struct {
 	baseURL    string
-	apiKey     string
+	apiKey     string // x-api-key auth
+	oauthToken string // Bearer auth (preferred for newer endpoints; some require it)
 	userAgent  string
 	httpClient *http.Client
 
@@ -36,6 +37,11 @@ type Client struct {
 	sleeper func(time.Duration)
 }
 
+// NewClient builds a client authenticated with an Admin API key (x-api-key).
+// Use SetOAuthToken to also enable Bearer auth — when both are set, Bearer
+// takes precedence (the doc's modern preferred pattern), and a handful of
+// newer endpoints (Service Accounts, Federation, MCP Tunnels) reject the
+// x-api-key path outright.
 func NewClient(baseURL, apiKey, version string) *Client {
 	return &Client{
 		baseURL:    strings.TrimRight(baseURL, "/"),
@@ -44,6 +50,18 @@ func NewClient(baseURL, apiKey, version string) *Client {
 		httpClient: &http.Client{Timeout: defaultTimeout},
 	}
 }
+
+// SetOAuthToken enables OAuth Bearer auth on the client. When set, every
+// outgoing request uses `Authorization: Bearer <token>` instead of x-api-key.
+// Pass an empty string to clear.
+func (c *Client) SetOAuthToken(token string) {
+	c.oauthToken = token
+}
+
+// HasOAuth reports whether the client has an OAuth token configured. Used by
+// endpoints that REQUIRE Bearer auth to fail-fast at the provider layer with
+// a clear message instead of letting the API return a 401.
+func (c *Client) HasOAuth() bool { return c.oauthToken != "" }
 
 type APIError struct {
 	StatusCode int
@@ -68,6 +86,22 @@ func (c *Client) sleep(d time.Duration) {
 	time.Sleep(d)
 }
 
+// betaHeadersKey is the context key under which callers attach
+// `anthropic-beta` header values to be added to outgoing requests.
+// Used by beta endpoints (MCP Tunnels) to declare the beta version they
+// need without forcing every other call site to thread an extra param.
+type betaHeadersKey struct{}
+
+// WithBetaHeaders returns a child context that adds the given beta versions
+// to any request made through Client.do(). Multiple values may be passed;
+// each gets its own `anthropic-beta` header on the outgoing request.
+func WithBetaHeaders(ctx context.Context, versions ...string) context.Context {
+	if len(versions) == 0 {
+		return ctx
+	}
+	return context.WithValue(ctx, betaHeadersKey{}, versions)
+}
+
 func (c *Client) do(ctx context.Context, method, path string, body, out any) error {
 	var bodyBytes []byte
 	if body != nil {
@@ -89,10 +123,17 @@ func (c *Client) do(ctx context.Context, method, path string, body, out any) err
 		if err != nil {
 			return fmt.Errorf("build request: %w", err)
 		}
-		req.Header.Set("x-api-key", c.apiKey)
+		c.setAuthHeaders(req)
 		req.Header.Set("anthropic-version", apiVersionHeader)
 		req.Header.Set("content-type", "application/json")
 		req.Header.Set("user-agent", c.userAgent)
+		if v := ctx.Value(betaHeadersKey{}); v != nil {
+			if versions, ok := v.([]string); ok {
+				for _, b := range versions {
+					req.Header.Add("anthropic-beta", b)
+				}
+			}
+		}
 
 		resp, err := c.httpClient.Do(req)
 		if err != nil {
@@ -144,8 +185,20 @@ func (c *Client) do(ctx context.Context, method, path string, body, out any) err
 		}
 		return nil
 	}
-	// Loop body always returns; defensive guard for compiler.
 	return fmt.Errorf("unreachable: retry loop exited without a result")
+}
+
+// setAuthHeaders prefers Bearer when both are present — that's the doc's
+// modern preferred pattern, and several newer endpoints (Service Accounts,
+// Federation, MCP Tunnels) reject x-api-key outright.
+func (c *Client) setAuthHeaders(req *http.Request) {
+	if c.oauthToken != "" {
+		req.Header.Set("Authorization", "Bearer "+c.oauthToken)
+		return
+	}
+	if c.apiKey != "" {
+		req.Header.Set("x-api-key", c.apiKey)
+	}
 }
 
 // retryAfterFromResponse picks a wait duration: prefer the API's Retry-After
@@ -161,7 +214,6 @@ func retryAfterFromResponse(resp *http.Response, attempt int) time.Duration {
 			return d
 		}
 	}
-	// Exponential backoff: base * 2^attempt, capped, plus 0..jitter.
 	expo := baseBackoff << attempt
 	if expo > maxBackoff {
 		expo = maxBackoff
@@ -169,3 +221,8 @@ func retryAfterFromResponse(resp *http.Response, attempt int) time.Duration {
 	jitter := time.Duration(rand.Int63n(int64(backoffJitter)))
 	return expo + jitter
 }
+
+// ErrOAuthRequired signals that an endpoint requires Bearer auth but the
+// client only has an Admin API key. Wrapped at resource layer with a clear
+// remediation message.
+var ErrOAuthRequired = errors.New("this endpoint requires OAuth bearer auth (set provider attribute oauth_token or env ANTHROPIC_OAUTH_TOKEN)")

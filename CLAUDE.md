@@ -20,30 +20,60 @@ The Admin API requires an **admin API key** (`x-api-key`) distinct from regular 
 
 Feature-complete v0.1: full Admin API surface, validators on every enum, retry/backoff for 429, generated docs, unit tests, acceptance test scaffolding, and CI. `go build ./... && go vet ./... && gofmt -l . && go test -race ./...` all green; `terraform fmt -check -recursive examples/` clean. Not yet validated against the live Admin API — acceptance tests require `TF_ACC=1` + `ANTHROPIC_ADMIN_API_KEY` and have not been executed.
 
-### Resources (6)
+### Resources (14)
+
+Admin API key compatible:
 
 | Resource | Notes |
 |---|---|
-| `anthropic_workspace` | Create / Read / Update / Delete-archives. `tags` mutable, `external_key_id` write-once, `data_residency` currently read-only. |
+| `anthropic_workspace` | Create / Read / Update / Delete-archives. `tags` mutable, `external_key_id` write-once, `data_residency` configurable with RequiresReplace on change. |
 | `anthropic_api_key` | Update-only — Admin API does not create keys. `Create` requires an existing `id`, applies name/status, `Delete` sets status=`archived`. |
-| `anthropic_workspace_member` | Composite id `<workspace_id>:<user_id>`. Role mutable; workspace_id/user_id RequireReplace. |
-| `anthropic_invite` | Create + Delete only — invites are immutable; any change to email/role forces replacement. `admin` role not allowed. |
-| `anthropic_organization_member` | Update-only — users join via accepted invite. `Create` requires existing user id, sets role. `Delete` removes the user from the org. |
-| `anthropic_external_key` | Full CRUD + validate for CMEK configurations. Polymorphic `provider_config` (aws/gcp/azure) modeled as a flat block with `type` discriminator. Delete fails if any workspace still references it. |
+| `anthropic_workspace_member` | Composite id `<workspace_id>:<user_id>`. Role mutable. |
+| `anthropic_invite` | Create + Delete only — invites are immutable. `admin` role not allowed. |
+| `anthropic_organization_member` | Update-only — users join via accepted invite. `Create` requires existing user id. |
+| `anthropic_external_key` | Full CRUD + validate for CMEK. Polymorphic `provider_config` (aws/gcp/azure). |
+| `anthropic_spend_limit` | Per-user spend limit override. Only `scope.type=user` is API-writable; group/seat-tier/org limits are Console-only. |
+| `anthropic_spend_limit_increase_decision` | Approve or deny a pending request. One-way (no Update). |
 
-### Data sources (18)
+**Require OAuth Bearer (`oauth_token`)** — Admin API keys rejected by the API:
 
-Identity / membership: `anthropic_organization`, `anthropic_workspace`, `anthropic_workspaces`, `anthropic_workspace_member`, `anthropic_workspace_members`, `anthropic_organization_member`, `anthropic_organization_members`, `anthropic_invite`, `anthropic_invites`.
+| Resource | Notes |
+|---|---|
+| `anthropic_service_account` | Named non-human identity for federation. `admin`-role create needs interactive credential. |
+| `anthropic_service_account_workspace` | SA → workspace assignment. Composite id `<sa_id>:<workspace_id>`. |
+| `anthropic_federation_issuer` | OIDC issuer. Polymorphic JWKS source (discovery / explicit_url / inline). |
+| `anthropic_federation_rule` | Binds OIDC claims to a service account. Match supports audience, claims map, CEL condition, subject_prefix. |
+| `anthropic_federation_rule_workspace` | Extends a rule to an additional workspace. Composite id. |
+| `anthropic_tunnel_certificate` | MCP tunnel CA cert (beta, `anthropic-beta: mcp-tunnels-2026-05-19` added automatically). |
 
-Keys / CMEK: `anthropic_api_key`, `anthropic_api_keys`, `anthropic_external_key`, `anthropic_external_keys`.
+### Data sources (37)
 
-Operational: `anthropic_organization_rate_limits` (org-level baseline), `anthropic_workspace_rate_limits` (workspace overrides — absence = inherit, not no-limit), `anthropic_usage_report` (messages), `anthropic_claude_code_usage_report`, `anthropic_cost_report`.
+Identity & membership: `anthropic_organization`, `anthropic_workspace[s]`, `anthropic_workspace_member[s]`, `anthropic_organization_member[s]`, `anthropic_invite[s]`.
 
-The three reports + external_keys are the **headline differentiation** vs `terraform-mars/terraform-provider-anthropic`, which covers only workspaces, api_keys, workspace_members, and invites.
+Keys / CMEK: `anthropic_api_key[s]`, `anthropic_external_key[s]`.
+
+Rate limits: `anthropic_organization_rate_limits` (org baseline), `anthropic_workspace_rate_limits` (workspace overrides).
+
+FinOps reports (legacy v1): `anthropic_usage_report`, `anthropic_claude_code_usage_report`, `anthropic_cost_report`.
+
+FinOps automation: `anthropic_effective_spend_limits`, `anthropic_spend_limit_increase_request[s]`.
+
+Analytics v2 (Enterprise + `read:analytics` scope): `anthropic_activity_summaries`, `anthropic_token_usage_over_time`, `anthropic_per_user_token_usage`, `anthropic_cost_over_time`, `anthropic_per_user_cost`, `anthropic_user_activity`, `anthropic_skills_usage`, `anthropic_connectors_usage`, `anthropic_chat_projects_usage`.
+
+Service accounts (Bearer auth): `anthropic_service_account[s]`, `anthropic_service_account_workspaces`, `anthropic_workspace_service_accounts`.
+
+MCP Tunnels (Bearer + beta): `anthropic_tunnel[s]`, `anthropic_tunnel_certificates`.
+
+The FinOps reports + analytics v2 + CMEK + spend limits + service accounts + federation are the **headline differentiation** vs `terraform-mars/terraform-provider-anthropic`, which covers only workspaces, api_keys, workspace_members, and invites.
 
 ### Coverage vs Admin API docs
 
-We cover **every** endpoint group documented at https://platform.claude.com/docs/en/api/admin **except MCP Tunnels** — a beta surface (5 tunnel + 4 cert endpoints) that uses a different auth model (Bearer/WIF instead of `x-api-key`) and requires the `anthropic-beta: mcp-tunnels-2026-05-19` header. Adding it would require a second auth code path in `internal/anthropic.Client`. Deliberately out of scope for v0.1; track as a future addition if customers need it. Service Accounts and Audit Logs are NOT in the Admin API (confirmed via sitemap audit on 2026-06-10 — the breadcrumb mention was misleading).
+We cover **every** endpoint group documented at https://platform.claude.com/docs/en/api/admin. The client supports both auth modes (x-api-key + Bearer); endpoints that reject Admin API keys (Service Accounts, Federation, MCP Tunnels) check `Client.HasOAuth()` upfront and return `ErrOAuthRequired` instead of letting the API return 401. MCP Tunnels endpoints automatically attach the `anthropic-beta: mcp-tunnels-2026-05-19` header via `WithBetaHeaders`. Audit Logs are NOT in the Admin API (confirmed via doc audit on 2026-06-10).
+
+Doc-noted limitations we accept:
+- `anthropic_spend_limit` only accepts `scope.type=user` for writes; seat-tier / rbac_group / organization-service / organization-level limits remain Console-only.
+- `anthropic_tunnel_certificate` uses the Admin API path (`/v1/organizations/tunnels/...`) which is being deprecated in favor of `/v1/tunnels` on the public API. Track migration when the new path stabilizes.
+- Federation Issuer / Rule mutations have additional scope restrictions (Console session required when granting `org:admin` scope or managing certain non-`workspace:developer` / `workspace:inference` scopes). Provider passes the call through; the API will reject if scope mismatches.
 
 ## Competitive context
 
@@ -110,9 +140,10 @@ For local end-to-end testing without publishing, point `~/.terraformrc` `dev_ove
 
 ## Architecture notes
 
-- **Authentication**: provider accepts `anthropic_admin_api_key` (env fallback `ANTHROPIC_ADMIN_API_KEY`) and an optional `base_url` (defaults to `https://api.anthropic.com`).
+- **Authentication**: provider accepts `admin_api_key` (env `ANTHROPIC_ADMIN_API_KEY`, x-api-key header) and/or `oauth_token` (env `ANTHROPIC_OAUTH_TOKEN`, Bearer header). When both are set Bearer takes precedence — that's the doc's modern preferred pattern, and a handful of newer endpoints (Service Accounts, Federation, MCP Tunnels) reject x-api-key outright. The client exposes `HasOAuth()` so resource layer can fail-fast with `ErrOAuthRequired` when an endpoint needs Bearer.
+- **Beta headers**: `WithBetaHeaders(ctx, "mcp-tunnels-2026-05-19")` adds `anthropic-beta` headers via context. MCP Tunnel client functions do this automatically in `tunnels.go`.
 - **Client**: a single `internal/anthropic.Client` is constructed in `provider.Configure` and passed via `resp.ResourceData` / `resp.DataSourceData`. Every resource/data source unwraps it through `clientFromProviderData` in `internal/provider/common.go` — do not instantiate HTTP clients inside resource methods.
-- **Headers**: every Admin API request sets `x-api-key`, `anthropic-version: 2023-06-01`, `content-type: application/json`, and a `user-agent` carrying the provider version. The version header is required even for Admin endpoints.
+- **Headers**: every request sets the chosen auth header, `anthropic-version: 2023-06-01`, `content-type: application/json`, and a `user-agent` carrying the provider version.
 - **Retries**: the client retries HTTP 429 up to `maxRetries` (5) times with exponential backoff (base 500ms, capped at 30s, plus small jitter). Honors `Retry-After` header when the API sends one. After exhaustion, returns an `APIError` with `Type: "rate_limit"` and a "max retries exceeded" message. The retry path is testable via the `sleeper` hook on `Client` — see `TestClient_RetriesOn429UntilSuccess`.
 - **Pagination**: list endpoints use cursor pagination (`after_id` / `before_id` + `limit`). The client's `List*` methods follow `has_more` + `last_id` until exhausted and return the full slice — data sources don't reimplement paging.
 - **Validators**: every enumerated string field (roles, statuses, bucket_width, group_by, provider_config.type, geo, etc.) has a `stringvalidator.OneOf` / `listvalidator.ValueStringsAre(...)` so invalid values fail at plan time with a clear message instead of bouncing off the API.
