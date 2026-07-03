@@ -71,7 +71,7 @@ jobs:
         run: go install github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs@latest
 
       - name: regenerate docs
-        run: tfplugindocs generate --provider-name anthropic
+        run: tfplugindocs generate --provider-name claudeadmin --rendered-provider-name claudeadmin
 
       - name: fail if docs drifted
         run: |
