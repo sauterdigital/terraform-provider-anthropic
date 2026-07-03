@@ -21,39 +21,39 @@ func TestAccWorkspaceMember_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: fmt.Sprintf(`
-resource "anthropic_workspace" "test" {
+resource "claudeadmin_workspace" "test" {
   name = %q
 }
 
-resource "anthropic_workspace_member" "test" {
-  workspace_id   = anthropic_workspace.test.id
+resource "claudeadmin_workspace_member" "test" {
+  workspace_id   = claudeadmin_workspace.test.id
   user_id        = %q
   workspace_role = "workspace_developer"
 }
 `, wsName, userID),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("anthropic_workspace_member.test", "user_id", userID),
-					resource.TestCheckResourceAttr("anthropic_workspace_member.test", "workspace_role", "workspace_developer"),
-					resource.TestCheckResourceAttrSet("anthropic_workspace_member.test", "id"),
+					resource.TestCheckResourceAttr("claudeadmin_workspace_member.test", "user_id", userID),
+					resource.TestCheckResourceAttr("claudeadmin_workspace_member.test", "workspace_role", "workspace_developer"),
+					resource.TestCheckResourceAttrSet("claudeadmin_workspace_member.test", "id"),
 				),
 			},
 			// Role update — should NOT force replace, just POST to update endpoint.
 			{
 				Config: fmt.Sprintf(`
-resource "anthropic_workspace" "test" {
+resource "claudeadmin_workspace" "test" {
   name = %q
 }
 
-resource "anthropic_workspace_member" "test" {
-  workspace_id   = anthropic_workspace.test.id
+resource "claudeadmin_workspace_member" "test" {
+  workspace_id   = claudeadmin_workspace.test.id
   user_id        = %q
   workspace_role = "workspace_admin"
 }
 `, wsName, userID),
-				Check: resource.TestCheckResourceAttr("anthropic_workspace_member.test", "workspace_role", "workspace_admin"),
+				Check: resource.TestCheckResourceAttr("claudeadmin_workspace_member.test", "workspace_role", "workspace_admin"),
 			},
 			{
-				ResourceName:      "anthropic_workspace_member.test",
+				ResourceName:      "claudeadmin_workspace_member.test",
 				ImportState:       true,
 				ImportStateVerify: true,
 			},

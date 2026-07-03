@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
-	"github.com/sauterdigital/terraform-provider-claude-admin/internal/anthropic"
+	"github.com/sauterdigital/terraform-provider-claudeadmin/internal/anthropic"
 )
 
 var (
@@ -46,7 +46,7 @@ func (d *OrganizationRateLimitsDataSource) Metadata(_ context.Context, req datas
 
 func (d *OrganizationRateLimitsDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "Lists Messages API rate limits configured at the ORGANIZATION level. Unlike `anthropic_workspace_rate_limits`, this returns every group active on the org (not just overrides) — it's the source of truth for what the org's baseline limits actually are.",
+		Description: "Lists Messages API rate limits configured at the ORGANIZATION level. Unlike `claudeadmin_workspace_rate_limits`, this returns every group active on the org (not just overrides) — it's the source of truth for what the org's baseline limits actually are.",
 		Attributes: map[string]schema.Attribute{
 			"group_type": schema.StringAttribute{
 				Optional:    true,

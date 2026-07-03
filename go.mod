@@ -1,4 +1,4 @@
-module github.com/sauterdigital/terraform-provider-claude-admin
+module github.com/sauterdigital/terraform-provider-claudeadmin
 
 go 1.25.8
 

@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
-	"github.com/sauterdigital/terraform-provider-claude-admin/internal/anthropic"
+	"github.com/sauterdigital/terraform-provider-claudeadmin/internal/anthropic"
 )
 
 var (
@@ -39,7 +39,7 @@ func (r *OrganizationMemberResource) Metadata(_ context.Context, req resource.Me
 
 func (r *OrganizationMemberResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "Manages the organization-level role of an existing user. Users must join via an accepted `anthropic_invite` first; this resource lets you change their role declaratively or remove them. Destroy removes the user from the organization.",
+		Description: "Manages the organization-level role of an existing user. Users must join via an accepted `claudeadmin_invite` first; this resource lets you change their role declaratively or remove them. Destroy removes the user from the organization.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Description:   "User ID (e.g. `user_...`). Must already exist as an organization member.",
@@ -73,7 +73,7 @@ func (r *OrganizationMemberResource) Create(ctx context.Context, req resource.Cr
 		return
 	}
 	if _, err := r.client.GetUser(ctx, plan.ID.ValueString()); err != nil {
-		resp.Diagnostics.AddError("User not found", "Users can only be added via `anthropic_invite`. The supplied id must already exist. "+err.Error())
+		resp.Diagnostics.AddError("User not found", "Users can only be added via `claudeadmin_invite`. The supplied id must already exist. "+err.Error())
 		return
 	}
 	u, err := r.client.UpdateUser(ctx, plan.ID.ValueString(), anthropic.UpdateUserRequest{Role: plan.Role.ValueString()})

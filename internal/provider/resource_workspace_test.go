@@ -25,18 +25,18 @@ func TestAccWorkspace_basic(t *testing.T) {
 			{
 				Config: testAccWorkspaceConfig(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("anthropic_workspace.test", "name", name),
-					resource.TestCheckResourceAttrSet("anthropic_workspace.test", "id"),
-					resource.TestCheckResourceAttrSet("anthropic_workspace.test", "created_at"),
-					resource.TestCheckResourceAttrSet("anthropic_workspace.test", "display_color"),
+					resource.TestCheckResourceAttr("claudeadmin_workspace.test", "name", name),
+					resource.TestCheckResourceAttrSet("claudeadmin_workspace.test", "id"),
+					resource.TestCheckResourceAttrSet("claudeadmin_workspace.test", "created_at"),
+					resource.TestCheckResourceAttrSet("claudeadmin_workspace.test", "display_color"),
 				),
 			},
 			{
 				Config: testAccWorkspaceConfig(updated),
-				Check:  resource.TestCheckResourceAttr("anthropic_workspace.test", "name", updated),
+				Check:  resource.TestCheckResourceAttr("claudeadmin_workspace.test", "name", updated),
 			},
 			{
-				ResourceName:      "anthropic_workspace.test",
+				ResourceName:      "claudeadmin_workspace.test",
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -57,15 +57,15 @@ func TestAccWorkspace_withTags(t *testing.T) {
 			{
 				Config: testAccWorkspaceConfigWithTags(name, map[string]string{"env": "test", "team": "platform"}),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("anthropic_workspace.tagged", "tags.env", "test"),
-					resource.TestCheckResourceAttr("anthropic_workspace.tagged", "tags.team", "platform"),
+					resource.TestCheckResourceAttr("claudeadmin_workspace.tagged", "tags.env", "test"),
+					resource.TestCheckResourceAttr("claudeadmin_workspace.tagged", "tags.team", "platform"),
 				),
 			},
 			{
 				Config: testAccWorkspaceConfigWithTags(name, map[string]string{"env": "staging"}),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("anthropic_workspace.tagged", "tags.env", "staging"),
-					resource.TestCheckNoResourceAttr("anthropic_workspace.tagged", "tags.team"),
+					resource.TestCheckResourceAttr("claudeadmin_workspace.tagged", "tags.env", "staging"),
+					resource.TestCheckNoResourceAttr("claudeadmin_workspace.tagged", "tags.team"),
 				),
 			},
 		},
@@ -74,7 +74,7 @@ func TestAccWorkspace_withTags(t *testing.T) {
 
 func testAccWorkspaceConfig(name string) string {
 	return fmt.Sprintf(`
-resource "anthropic_workspace" "test" {
+resource "claudeadmin_workspace" "test" {
   name = %q
 }
 `, name)
@@ -86,7 +86,7 @@ func testAccWorkspaceConfigWithTags(name string, tags map[string]string) string 
 		pairs += fmt.Sprintf("    %s = %q\n", k, v)
 	}
 	return fmt.Sprintf(`
-resource "anthropic_workspace" "tagged" {
+resource "claudeadmin_workspace" "tagged" {
   name = %q
   tags = {
 %s  }

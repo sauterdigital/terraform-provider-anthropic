@@ -1,6 +1,6 @@
-# terraform-provider-claude-admin
+# terraform-provider-claudeadmin
 
-[![ci](https://github.com/sauterdigital/terraform-provider-claude-admin/actions/workflows/ci.yml/badge.svg)](https://github.com/sauterdigital/terraform-provider-claude-admin/actions/workflows/ci.yml)
+[![ci](https://github.com/sauterdigital/terraform-provider-claudeadmin/actions/workflows/ci.yml/badge.svg)](https://github.com/sauterdigital/terraform-provider-claudeadmin/actions/workflows/ci.yml)
 [![license](https://img.shields.io/badge/license-MPL--2.0-blue.svg)](./LICENSE)
 
 > **Unofficial, community-maintained** Terraform provider for the Anthropic Admin API. Not affiliated with, endorsed by, sponsored by, or supported by Anthropic PBC. "Anthropic", "Claude", and related marks are trademarks of Anthropic PBC and are used here solely to identify compatibility (nominative fair use). For official products and support, see [anthropic.com](https://www.anthropic.com).
@@ -15,7 +15,7 @@ Covers **every documented Admin API endpoint** plus Compliance API: 15 resources
 terraform {
   required_providers {
     anthropic = {
-      source  = "sauterdigital/claude-admin"
+      source  = "sauterdigital/claudeadmin"
       version = "~> 0.3"
     }
   }
@@ -27,7 +27,7 @@ provider "anthropic" {
   # compliance_api_key = "sk-ant-api01-..."   # or ANTHROPIC_COMPLIANCE_API_KEY (Compliance data sources)
 }
 
-resource "anthropic_workspace" "platform" {
+resource "claudeadmin_workspace" "platform" {
   name = "platform"
   tags = {
     env  = "prod"
@@ -36,7 +36,7 @@ resource "anthropic_workspace" "platform" {
 }
 
 # Daily cost per workspace for the last 30 days — feed into your FinOps stack.
-data "anthropic_cost_report" "monthly" {
+data "claudeadmin_cost_report" "monthly" {
   starting_at  = formatdate("YYYY-MM-DD'T'00:00:00'Z'", timeadd(timestamp(), "-720h"))
   bucket_width = "1d"
   group_by     = ["workspace_id"]
@@ -53,38 +53,38 @@ Authenticated with `admin_api_key` (x-api-key):
 
 | Resource | Notes |
 |---|---|
-| `anthropic_workspace` | Full CRUD. Tags mutable, `external_key_id` write-once, `data_residency` triggers replace on change. |
-| `anthropic_api_key` | Update-only — the Admin API can't create keys. Supply an existing `id` and the provider manages name/status. |
-| `anthropic_workspace_member` | Composite id `<workspace_id>:<user_id>`; role mutable. |
-| `anthropic_invite` | Immutable after create — changes to email/role force replacement. |
-| `anthropic_organization_member` | Set org role for an existing user (joined via accepted invite). |
-| `anthropic_external_key` | CMEK config CRUD + validate, polymorphic across AWS / GCP / Azure. |
-| `anthropic_spend_limit` | Per-user spend limit override (org/group/seat-tier limits stay in Console). |
-| `anthropic_spend_limit_increase_decision` | Approve or deny a user's request to raise their cap. |
+| `claudeadmin_workspace` | Full CRUD. Tags mutable, `external_key_id` write-once, `data_residency` triggers replace on change. |
+| `claudeadmin_api_key` | Update-only — the Admin API can't create keys. Supply an existing `id` and the provider manages name/status. |
+| `claudeadmin_workspace_member` | Composite id `<workspace_id>:<user_id>`; role mutable. |
+| `claudeadmin_invite` | Immutable after create — changes to email/role force replacement. |
+| `claudeadmin_organization_member` | Set org role for an existing user (joined via accepted invite). |
+| `claudeadmin_external_key` | CMEK config CRUD + validate, polymorphic across AWS / GCP / Azure. |
+| `claudeadmin_spend_limit` | Per-user spend limit override (org/group/seat-tier limits stay in Console). |
+| `claudeadmin_spend_limit_increase_decision` | Approve or deny a user's request to raise their cap. |
 
 Require `oauth_token` (Bearer auth) — Admin API keys are rejected:
 
 | Resource | Notes |
 |---|---|
-| `anthropic_service_account` | Named non-human identity for federation. `admin`-role creation needs interactive credential. |
-| `anthropic_service_account_workspace` | Assigns an SA to a workspace with a role. |
-| `anthropic_federation_issuer` | OIDC issuer registration (GitHub Actions, GitLab, etc). Polymorphic JWKS source. |
-| `anthropic_federation_rule` | Workload identity federation rule binding OIDC claims to an SA. |
-| `anthropic_federation_rule_workspace` | Extends a rule to an additional workspace. |
-| `anthropic_tunnel_certificate` | MCP tunnel CA certificate (beta, `mcp-tunnels-2026-06-22` header added automatically). |
-| `anthropic_tunnel_token_rotation` | Declarative MCP tunnel token rotation. Change `rotation_id` to trigger a new rotation; fresh token becomes a sensitive state attribute. |
+| `claudeadmin_service_account` | Named non-human identity for federation. `admin`-role creation needs interactive credential. |
+| `claudeadmin_service_account_workspace` | Assigns an SA to a workspace with a role. |
+| `claudeadmin_federation_issuer` | OIDC issuer registration (GitHub Actions, GitLab, etc). Polymorphic JWKS source. |
+| `claudeadmin_federation_rule` | Workload identity federation rule binding OIDC claims to an SA. |
+| `claudeadmin_federation_rule_workspace` | Extends a rule to an additional workspace. |
+| `claudeadmin_tunnel_certificate` | MCP tunnel CA certificate (beta, `mcp-tunnels-2026-06-22` header added automatically). |
+| `claudeadmin_tunnel_token_rotation` | Declarative MCP tunnel token rotation. Change `rotation_id` to trigger a new rotation; fresh token becomes a sensitive state attribute. |
 
 **44 data sources**
 
-- Identity & membership: `anthropic_organization`, `anthropic_workspace[s]`, `anthropic_workspace_member[s]`, `anthropic_organization_member[s]`, `anthropic_invite[s]`
-- Keys / CMEK: `anthropic_api_key[s]`, `anthropic_external_key[s]`
-- Operational: `anthropic_organization_rate_limits`, `anthropic_workspace_rate_limits`
-- FinOps reports (legacy v1): `anthropic_usage_report`, `anthropic_claude_code_usage_report`, `anthropic_cost_report`
-- FinOps automation: `anthropic_effective_spend_limits`, `anthropic_spend_limit_increase_request[s]`
-- Analytics v2 (Enterprise + `read:analytics` scope): `anthropic_activity_summaries`, `anthropic_token_usage_over_time`, `anthropic_per_user_token_usage`, `anthropic_cost_over_time`, `anthropic_per_user_cost`, `anthropic_user_activity`, `anthropic_skills_usage`, `anthropic_connectors_usage`, `anthropic_chat_projects_usage`
-- Service accounts (Bearer): `anthropic_service_account[s]`, `anthropic_service_account_workspaces`, `anthropic_workspace_service_accounts`
-- MCP Tunnels (Bearer + beta): `anthropic_tunnel[s]`, `anthropic_tunnel_certificates`, `anthropic_tunnel_token`
-- Compliance API (dedicated `compliance_api_key`, Enterprise): `anthropic_compliance_activities`, `anthropic_compliance_organizations`, `anthropic_compliance_organization_users`, `anthropic_compliance_organization_roles`, `anthropic_compliance_groups`, `anthropic_compliance_group_members`, `anthropic_compliance_organization_settings`
+- Identity & membership: `claudeadmin_organization`, `claudeadmin_workspace[s]`, `claudeadmin_workspace_member[s]`, `claudeadmin_organization_member[s]`, `claudeadmin_invite[s]`
+- Keys / CMEK: `claudeadmin_api_key[s]`, `claudeadmin_external_key[s]`
+- Operational: `claudeadmin_organization_rate_limits`, `claudeadmin_workspace_rate_limits`
+- FinOps reports (legacy v1): `claudeadmin_usage_report`, `claudeadmin_claude_code_usage_report`, `claudeadmin_cost_report`
+- FinOps automation: `claudeadmin_effective_spend_limits`, `claudeadmin_spend_limit_increase_request[s]`
+- Analytics v2 (Enterprise + `read:analytics` scope): `claudeadmin_activity_summaries`, `claudeadmin_token_usage_over_time`, `claudeadmin_per_user_token_usage`, `claudeadmin_cost_over_time`, `claudeadmin_per_user_cost`, `claudeadmin_user_activity`, `claudeadmin_skills_usage`, `claudeadmin_connectors_usage`, `claudeadmin_chat_projects_usage`
+- Service accounts (Bearer): `claudeadmin_service_account[s]`, `claudeadmin_service_account_workspaces`, `claudeadmin_workspace_service_accounts`
+- MCP Tunnels (Bearer + beta): `claudeadmin_tunnel[s]`, `claudeadmin_tunnel_certificates`, `claudeadmin_tunnel_token`
+- Compliance API (dedicated `compliance_api_key`, Enterprise): `claudeadmin_compliance_activities`, `claudeadmin_compliance_organizations`, `claudeadmin_compliance_organization_users`, `claudeadmin_compliance_organization_roles`, `claudeadmin_compliance_groups`, `claudeadmin_compliance_group_members`, `claudeadmin_compliance_organization_settings`
 
 Full schema reference: [`docs/`](./docs).
 
@@ -94,7 +94,7 @@ Full schema reference: [`docs/`](./docs).
 |---|---|---|
 | `admin_api_key` | `ANTHROPIC_ADMIN_API_KEY` | Admin API key (`sk-ant-admin-...`). Used as `x-api-key` header. Required for most endpoints. |
 | `oauth_token` | `ANTHROPIC_OAUTH_TOKEN` | OAuth Bearer token (user OAuth or WIF-minted SA token). **Required** for Service Accounts, Federation, and MCP Tunnels (which reject Admin API keys). When set, Bearer auth is used for ALL non-Compliance requests. |
-| `compliance_api_key` | `ANTHROPIC_COMPLIANCE_API_KEY` | Compliance API key (`sk-ant-api01-...`). Used exclusively for `/v1/compliance/*` endpoints — those reject both Admin API keys and OAuth bearer tokens. Required to use any `anthropic_compliance_*` data source. |
+| `compliance_api_key` | `ANTHROPIC_COMPLIANCE_API_KEY` | Compliance API key (`sk-ant-api01-...`). Used exclusively for `/v1/compliance/*` endpoints — those reject both Admin API keys and OAuth bearer tokens. Required to use any `claudeadmin_compliance_*` data source. |
 | `base_url` | — | Optional. Defaults to `https://api.anthropic.com`. Override for staging or mock servers. |
 
 At least one of `admin_api_key` or `oauth_token` must be set. When both are configured the client uses Bearer (the API's modern preferred pattern). Compliance calls always use `compliance_api_key`. Every request sets `anthropic-version: 2023-06-01` and a provider-versioned `User-Agent`. HTTP 429 responses are retried with exponential backoff (capped at 30s), honoring `Retry-After` when present.
@@ -118,7 +118,7 @@ To use a local build in a real config without publishing, add a `dev_overrides` 
 ```hcl
 provider_installation {
   dev_overrides {
-    "sauterdigital/claude-admin" = "/path/to/your/$GOPATH/bin"
+    "sauterdigital/claudeadmin" = "/path/to/your/$GOPATH/bin"
   }
   direct {}
 }

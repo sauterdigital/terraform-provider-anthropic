@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
-	"github.com/sauterdigital/terraform-provider-claude-admin/internal/anthropic"
+	"github.com/sauterdigital/terraform-provider-claudeadmin/internal/anthropic"
 )
 
 const (
@@ -38,7 +38,7 @@ func New(version string) func() provider.Provider {
 }
 
 func (p *AnthropicProvider) Metadata(_ context.Context, _ provider.MetadataRequest, resp *provider.MetadataResponse) {
-	resp.TypeName = "anthropic"
+	resp.TypeName = "claudeadmin"
 	resp.Version = p.version
 }
 
@@ -57,7 +57,7 @@ func (p *AnthropicProvider) Schema(_ context.Context, _ provider.SchemaRequest, 
 				Sensitive:   true,
 			},
 			"compliance_api_key": schema.StringAttribute{
-				Description: "Compliance API key (`sk-ant-api01-...`). May also be set via ANTHROPIC_COMPLIANCE_API_KEY. Used exclusively for `/v1/compliance/*` endpoints — those reject both Admin API keys and OAuth bearer tokens. Required to use any `anthropic_compliance_*` data source.",
+				Description: "Compliance API key (`sk-ant-api01-...`). May also be set via ANTHROPIC_COMPLIANCE_API_KEY. Used exclusively for `/v1/compliance/*` endpoints — those reject both Admin API keys and OAuth bearer tokens. Required to use any `claudeadmin_compliance_*` data source.",
 				Optional:    true,
 				Sensitive:   true,
 			},

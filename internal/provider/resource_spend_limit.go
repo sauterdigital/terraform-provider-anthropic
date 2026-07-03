@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
-	"github.com/sauterdigital/terraform-provider-claude-admin/internal/anthropic"
+	"github.com/sauterdigital/terraform-provider-claudeadmin/internal/anthropic"
 )
 
 var (
@@ -42,7 +42,7 @@ func (r *SpendLimitResource) Metadata(_ context.Context, req resource.MetadataRe
 
 func (r *SpendLimitResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "Manages a PER-USER spend limit override. The Admin API only accepts `scope.type=user` for writes — seat-tier, rbac_group, organization_service, and organization-level limits are configured in claude.ai and surface here read-only via `anthropic_effective_spend_limits`. Amount is a decimal string in minor units (e.g. \"12345\" = $123.45 USD).",
+		Description: "Manages a PER-USER spend limit override. The Admin API only accepts `scope.type=user` for writes — seat-tier, rbac_group, organization_service, and organization-level limits are configured in claude.ai and surface here read-only via `claudeadmin_effective_spend_limits`. Amount is a decimal string in minor units (e.g. \"12345\" = $123.45 USD).",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Computed:      true,

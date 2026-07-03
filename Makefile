@@ -1,6 +1,6 @@
-NAME      ?= claude-admin
+NAME      ?= claudeadmin
 NAMESPACE ?= sauterdigital
-VERSION   ?= 0.3.1
+VERSION   ?= 0.4.0
 HOSTNAME  ?= registry.terraform.io
 BINARY    := terraform-provider-$(NAME)
 OS_ARCH   := $(shell go env GOOS)_$(shell go env GOARCH)
@@ -30,7 +30,7 @@ tidy:
 	go mod tidy
 
 docs:
-	tfplugindocs generate
+	tfplugindocs generate --provider-name claudeadmin --rendered-provider-name claudeadmin
 
 clean:
 	rm -f $(BINARY)

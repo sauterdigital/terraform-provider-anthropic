@@ -15,10 +15,10 @@ func TestAccDataSourceOrganization_basic(t *testing.T) {
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: `data "anthropic_organization" "current" {}`,
+				Config: `data "claudeadmin_organization" "current" {}`,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrSet("data.anthropic_organization.current", "id"),
-					resource.TestCheckResourceAttrSet("data.anthropic_organization.current", "name"),
+					resource.TestCheckResourceAttrSet("data.claudeadmin_organization.current", "id"),
+					resource.TestCheckResourceAttrSet("data.claudeadmin_organization.current", "name"),
 				),
 			},
 		},
@@ -31,10 +31,10 @@ func TestAccDataSourceWorkspaces_basic(t *testing.T) {
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: `data "anthropic_workspaces" "all" { include_archived = false }`,
+				Config: `data "claudeadmin_workspaces" "all" { include_archived = false }`,
 				// `workspaces` may be empty in a fresh org — we just verify the
 				// list attribute exists (returns 0+ items without error).
-				Check: resource.TestCheckResourceAttrSet("data.anthropic_workspaces.all", "workspaces.#"),
+				Check: resource.TestCheckResourceAttrSet("data.claudeadmin_workspaces.all", "workspaces.#"),
 			},
 		},
 	})
@@ -46,8 +46,8 @@ func TestAccDataSourceOrganizationRateLimits_basic(t *testing.T) {
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: `data "anthropic_organization_rate_limits" "all" {}`,
-				Check:  resource.TestCheckResourceAttrSet("data.anthropic_organization_rate_limits.all", "groups.#"),
+				Config: `data "claudeadmin_organization_rate_limits" "all" {}`,
+				Check:  resource.TestCheckResourceAttrSet("data.claudeadmin_organization_rate_limits.all", "groups.#"),
 			},
 		},
 	})

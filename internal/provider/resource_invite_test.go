@@ -23,22 +23,22 @@ func TestAccInvite_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: fmt.Sprintf(`
-resource "anthropic_invite" "test" {
+resource "claudeadmin_invite" "test" {
   email = %q
   role  = "user"
 }
 `, email),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("anthropic_invite.test", "email", email),
-					resource.TestCheckResourceAttr("anthropic_invite.test", "role", "user"),
-					resource.TestCheckResourceAttrSet("anthropic_invite.test", "id"),
-					resource.TestCheckResourceAttrSet("anthropic_invite.test", "invited_at"),
-					resource.TestCheckResourceAttrSet("anthropic_invite.test", "expires_at"),
-					resource.TestCheckResourceAttr("anthropic_invite.test", "status", "pending"),
+					resource.TestCheckResourceAttr("claudeadmin_invite.test", "email", email),
+					resource.TestCheckResourceAttr("claudeadmin_invite.test", "role", "user"),
+					resource.TestCheckResourceAttrSet("claudeadmin_invite.test", "id"),
+					resource.TestCheckResourceAttrSet("claudeadmin_invite.test", "invited_at"),
+					resource.TestCheckResourceAttrSet("claudeadmin_invite.test", "expires_at"),
+					resource.TestCheckResourceAttr("claudeadmin_invite.test", "status", "pending"),
 				),
 			},
 			{
-				ResourceName:      "anthropic_invite.test",
+				ResourceName:      "claudeadmin_invite.test",
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -69,7 +69,7 @@ func TestAccInvite_roleForceReplace(t *testing.T) {
 
 func testAccInviteConfig(email, role string) string {
 	return fmt.Sprintf(`
-resource "anthropic_invite" "test" {
+resource "claudeadmin_invite" "test" {
   email = %q
   role  = %q
 }

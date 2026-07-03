@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
-	"github.com/sauterdigital/terraform-provider-claude-admin/internal/anthropic"
+	"github.com/sauterdigital/terraform-provider-claudeadmin/internal/anthropic"
 )
 
 var (
@@ -93,7 +93,7 @@ func (r *FederationRuleResource) Schema(_ context.Context, _ resource.SchemaRequ
 				ElementType: types.StringType,
 			},
 			"workspace_id": schema.StringAttribute{
-				Description: "Initial workspace to enable this rule for. Required unless applies_to_all_workspaces=true. Additional workspaces via `anthropic_federation_rule_workspace`.",
+				Description: "Initial workspace to enable this rule for. Required unless applies_to_all_workspaces=true. Additional workspaces via `claudeadmin_federation_rule_workspace`.",
 				Optional:    true,
 				Computed:    true,
 			},

@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
-	"github.com/sauterdigital/terraform-provider-claude-admin/internal/anthropic"
+	"github.com/sauterdigital/terraform-provider-claudeadmin/internal/anthropic"
 )
 
 var (
@@ -39,7 +39,7 @@ func (r *TunnelTokenRotationResource) Metadata(_ context.Context, req resource.M
 
 func (r *TunnelTokenRotationResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "Rotates the connection token for an MCP tunnel. Rotation is a one-way, irreversible operation — changing `rotation_id` forces replacement, which triggers a new `POST /v1/tunnels/{id}/rotate_token` call and produces a fresh `tunnel_token`. Beta — requires OAuth Bearer auth + beta header `anthropic-beta: mcp-tunnels-2026-06-22` (added automatically). To simply read the current token without rotating, use the `anthropic_tunnel_token` data source instead.",
+		Description: "Rotates the connection token for an MCP tunnel. Rotation is a one-way, irreversible operation — changing `rotation_id` forces replacement, which triggers a new `POST /v1/tunnels/{id}/rotate_token` call and produces a fresh `tunnel_token`. Beta — requires OAuth Bearer auth + beta header `anthropic-beta: mcp-tunnels-2026-06-22` (added automatically). To simply read the current token without rotating, use the `claudeadmin_tunnel_token` data source instead.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Description:   "Composite identifier `<tunnel_id>:<rotation_id>` — deterministic per rotation.",

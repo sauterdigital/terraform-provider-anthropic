@@ -26,46 +26,46 @@ Admin API key compatible:
 
 | Resource | Notes |
 |---|---|
-| `anthropic_workspace` | Create / Read / Update / Delete-archives. `tags` mutable, `external_key_id` write-once, `data_residency` configurable with RequiresReplace on change. |
-| `anthropic_api_key` | Update-only — Admin API does not create keys. `Create` requires an existing `id`, applies name/status, `Delete` sets status=`archived`. |
-| `anthropic_workspace_member` | Composite id `<workspace_id>:<user_id>`. Role mutable. |
-| `anthropic_invite` | Create + Delete only — invites are immutable. `admin` role not allowed. |
-| `anthropic_organization_member` | Update-only — users join via accepted invite. `Create` requires existing user id. |
-| `anthropic_external_key` | Full CRUD + validate for CMEK. Polymorphic `provider_config` (aws/gcp/azure). |
-| `anthropic_spend_limit` | Per-user spend limit override. Only `scope.type=user` is API-writable; group/seat-tier/org limits are Console-only. |
-| `anthropic_spend_limit_increase_decision` | Approve or deny a pending request. One-way (no Update). |
+| `claudeadmin_workspace` | Create / Read / Update / Delete-archives. `tags` mutable, `external_key_id` write-once, `data_residency` configurable with RequiresReplace on change. |
+| `claudeadmin_api_key` | Update-only — Admin API does not create keys. `Create` requires an existing `id`, applies name/status, `Delete` sets status=`archived`. |
+| `claudeadmin_workspace_member` | Composite id `<workspace_id>:<user_id>`. Role mutable. |
+| `claudeadmin_invite` | Create + Delete only — invites are immutable. `admin` role not allowed. |
+| `claudeadmin_organization_member` | Update-only — users join via accepted invite. `Create` requires existing user id. |
+| `claudeadmin_external_key` | Full CRUD + validate for CMEK. Polymorphic `provider_config` (aws/gcp/azure). |
+| `claudeadmin_spend_limit` | Per-user spend limit override. Only `scope.type=user` is API-writable; group/seat-tier/org limits are Console-only. |
+| `claudeadmin_spend_limit_increase_decision` | Approve or deny a pending request. One-way (no Update). |
 
 **Require OAuth Bearer (`oauth_token`)** — Admin API keys rejected by the API:
 
 | Resource | Notes |
 |---|---|
-| `anthropic_service_account` | Named non-human identity for federation. `admin`-role create needs interactive credential. |
-| `anthropic_service_account_workspace` | SA → workspace assignment. Composite id `<sa_id>:<workspace_id>`. |
-| `anthropic_federation_issuer` | OIDC issuer. Polymorphic JWKS source (discovery / explicit_url / inline). |
-| `anthropic_federation_rule` | Binds OIDC claims to a service account. Match supports audience, claims map, CEL condition, subject_prefix. |
-| `anthropic_federation_rule_workspace` | Extends a rule to an additional workspace. Composite id. |
-| `anthropic_tunnel_certificate` | MCP tunnel CA cert (beta, `anthropic-beta: mcp-tunnels-2026-06-22` added automatically). Uses `/v1/tunnels` (public API). |
-| `anthropic_tunnel_token_rotation` | Declarative token rotation. Change `rotation_id` to trigger a new rotation; fresh `tunnel_token` becomes the sensitive output. |
+| `claudeadmin_service_account` | Named non-human identity for federation. `admin`-role create needs interactive credential. |
+| `claudeadmin_service_account_workspace` | SA → workspace assignment. Composite id `<sa_id>:<workspace_id>`. |
+| `claudeadmin_federation_issuer` | OIDC issuer. Polymorphic JWKS source (discovery / explicit_url / inline). |
+| `claudeadmin_federation_rule` | Binds OIDC claims to a service account. Match supports audience, claims map, CEL condition, subject_prefix. |
+| `claudeadmin_federation_rule_workspace` | Extends a rule to an additional workspace. Composite id. |
+| `claudeadmin_tunnel_certificate` | MCP tunnel CA cert (beta, `anthropic-beta: mcp-tunnels-2026-06-22` added automatically). Uses `/v1/tunnels` (public API). |
+| `claudeadmin_tunnel_token_rotation` | Declarative token rotation. Change `rotation_id` to trigger a new rotation; fresh `tunnel_token` becomes the sensitive output. |
 
 ### Data sources (44)
 
-Identity & membership: `anthropic_organization`, `anthropic_workspace[s]`, `anthropic_workspace_member[s]`, `anthropic_organization_member[s]`, `anthropic_invite[s]`.
+Identity & membership: `claudeadmin_organization`, `claudeadmin_workspace[s]`, `claudeadmin_workspace_member[s]`, `claudeadmin_organization_member[s]`, `claudeadmin_invite[s]`.
 
-Keys / CMEK: `anthropic_api_key[s]`, `anthropic_external_key[s]`.
+Keys / CMEK: `claudeadmin_api_key[s]`, `claudeadmin_external_key[s]`.
 
-Rate limits: `anthropic_organization_rate_limits` (org baseline), `anthropic_workspace_rate_limits` (workspace overrides).
+Rate limits: `claudeadmin_organization_rate_limits` (org baseline), `claudeadmin_workspace_rate_limits` (workspace overrides).
 
-FinOps reports (legacy v1): `anthropic_usage_report`, `anthropic_claude_code_usage_report`, `anthropic_cost_report`.
+FinOps reports (legacy v1): `claudeadmin_usage_report`, `claudeadmin_claude_code_usage_report`, `claudeadmin_cost_report`.
 
-FinOps automation: `anthropic_effective_spend_limits`, `anthropic_spend_limit_increase_request[s]`.
+FinOps automation: `claudeadmin_effective_spend_limits`, `claudeadmin_spend_limit_increase_request[s]`.
 
-Analytics v2 (Enterprise + `read:analytics` scope): `anthropic_activity_summaries`, `anthropic_token_usage_over_time`, `anthropic_per_user_token_usage`, `anthropic_cost_over_time`, `anthropic_per_user_cost`, `anthropic_user_activity`, `anthropic_skills_usage`, `anthropic_connectors_usage`, `anthropic_chat_projects_usage`.
+Analytics v2 (Enterprise + `read:analytics` scope): `claudeadmin_activity_summaries`, `claudeadmin_token_usage_over_time`, `claudeadmin_per_user_token_usage`, `claudeadmin_cost_over_time`, `claudeadmin_per_user_cost`, `claudeadmin_user_activity`, `claudeadmin_skills_usage`, `claudeadmin_connectors_usage`, `claudeadmin_chat_projects_usage`.
 
-Service accounts (Bearer auth): `anthropic_service_account[s]`, `anthropic_service_account_workspaces`, `anthropic_workspace_service_accounts`.
+Service accounts (Bearer auth): `claudeadmin_service_account[s]`, `claudeadmin_service_account_workspaces`, `claudeadmin_workspace_service_accounts`.
 
-MCP Tunnels (Bearer + beta): `anthropic_tunnel[s]`, `anthropic_tunnel_certificates`, `anthropic_tunnel_token`.
+MCP Tunnels (Bearer + beta): `claudeadmin_tunnel[s]`, `claudeadmin_tunnel_certificates`, `claudeadmin_tunnel_token`.
 
-Compliance API (dedicated `compliance_api_key`, Enterprise): `anthropic_compliance_activities`, `anthropic_compliance_organizations`, `anthropic_compliance_organization_users`, `anthropic_compliance_organization_roles`, `anthropic_compliance_groups`, `anthropic_compliance_group_members`, `anthropic_compliance_organization_settings`.
+Compliance API (dedicated `compliance_api_key`, Enterprise): `claudeadmin_compliance_activities`, `claudeadmin_compliance_organizations`, `claudeadmin_compliance_organization_users`, `claudeadmin_compliance_organization_roles`, `claudeadmin_compliance_groups`, `claudeadmin_compliance_group_members`, `claudeadmin_compliance_organization_settings`.
 
 The FinOps reports + analytics v2 + CMEK + spend limits + service accounts + federation are the **headline differentiation** vs `terraform-mars/terraform-provider-anthropic`, which covers only workspaces, api_keys, workspace_members, and invites.
 
@@ -74,8 +74,8 @@ The FinOps reports + analytics v2 + CMEK + spend limits + service accounts + fed
 We cover **every** endpoint group documented at https://platform.claude.com/docs/en/api/admin, plus Compliance API (`/v1/compliance/*`) as of v0.3.0. The client supports three auth modes (x-api-key admin, Bearer OAuth, x-api-key compliance); endpoints that reject Admin API keys (Service Accounts, Federation, MCP Tunnels) check `Client.HasOAuth()` upfront and return `ErrOAuthRequired`. Compliance endpoints check `Client.HasCompliance()` and return `ErrComplianceRequired`. MCP Tunnels endpoints automatically attach the `anthropic-beta: mcp-tunnels-2026-06-22` header via `WithBetaHeaders`. Audit Logs are NOT in the Admin API (confirmed via doc audit on 2026-06-10).
 
 Doc-noted limitations we accept:
-- `anthropic_spend_limit` only accepts `scope.type=user` for writes; seat-tier / rbac_group / organization-service / organization-level limits remain Console-only.
-- `anthropic_tunnel_certificate` uses the Admin API path (`/v1/organizations/tunnels/...`) which is being deprecated in favor of `/v1/tunnels` on the public API. Track migration when the new path stabilizes.
+- `claudeadmin_spend_limit` only accepts `scope.type=user` for writes; seat-tier / rbac_group / organization-service / organization-level limits remain Console-only.
+- `claudeadmin_tunnel_certificate` uses the Admin API path (`/v1/organizations/tunnels/...`) which is being deprecated in favor of `/v1/tunnels` on the public API. Track migration when the new path stabilizes.
 - Federation Issuer / Rule mutations have additional scope restrictions (Console session required when granting `org:admin` scope or managing certain non-`workspace:developer` / `workspace:inference` scopes). Provider passes the call through; the API will reject if scope mismatches.
 
 ## Competitive context
@@ -150,11 +150,11 @@ For local end-to-end testing without publishing, point `~/.terraformrc` `dev_ove
 - **Retries**: the client retries HTTP 429 up to `maxRetries` (5) times with exponential backoff (base 500ms, capped at 30s, plus small jitter). Honors `Retry-After` header when the API sends one. After exhaustion, returns an `APIError` with `Type: "rate_limit"` and a "max retries exceeded" message. The retry path is testable via the `sleeper` hook on `Client` — see `TestClient_RetriesOn429UntilSuccess`.
 - **Pagination**: list endpoints use cursor pagination (`after_id` / `before_id` + `limit`). The client's `List*` methods follow `has_more` + `last_id` until exhausted and return the full slice — data sources don't reimplement paging.
 - **Validators**: every enumerated string field (roles, statuses, bucket_width, group_by, provider_config.type, geo, etc.) has a `stringvalidator.OneOf` / `listvalidator.ValueStringsAre(...)` so invalid values fail at plan time with a clear message instead of bouncing off the API.
-- **ID semantics**: Anthropic resources use prefixed string IDs (`user_…`, `wrkspc_…`, `apikey_…`, `invite_…`). These flow straight through as Terraform IDs. The only synthesized composite ID is `anthropic_workspace_member.id` = `<workspace_id>:<user_id>`, because the API has no single id for that pairing — `ImportState` parses the colon form.
+- **ID semantics**: Anthropic resources use prefixed string IDs (`user_…`, `wrkspc_…`, `apikey_…`, `invite_…`). These flow straight through as Terraform IDs. The only synthesized composite ID is `claudeadmin_workspace_member.id` = `<workspace_id>:<user_id>`, because the API has no single id for that pairing — `ImportState` parses the colon form.
 - **Drift on roles/permissions**: every `Read` hits the API and replaces state with the response, so out-of-band role changes are detected on refresh.
 - **Polymorphic `allowed_inference_geos`**: the Admin API returns either the literal string `"unrestricted"` or an array of geo strings. The client (`internal/anthropic/workspaces.go`) normalizes both onto `[]string`, with `["unrestricted"]` denoting unrestricted; the Terraform schema sees only a list.
-- **API-key Create**: Anthropic forbids creating keys via the Admin API. `anthropic_api_key` therefore implements `Create` as "fetch by supplied id + apply Update". If the id doesn't exist, Create errors with a clear message. Same pattern applies to `anthropic_organization_member` — users only arrive via accepted invites.
-- **Delete-by-archive**: `anthropic_workspace.Delete` calls `POST .../archive` and `anthropic_api_key.Delete` sets status=`archived` — neither is hard-deletion. Document this in resource docstrings rather than papering over it.
+- **API-key Create**: Anthropic forbids creating keys via the Admin API. `claudeadmin_api_key` therefore implements `Create` as "fetch by supplied id + apply Update". If the id doesn't exist, Create errors with a clear message. Same pattern applies to `claudeadmin_organization_member` — users only arrive via accepted invites.
+- **Delete-by-archive**: `claudeadmin_workspace.Delete` calls `POST .../archive` and `claudeadmin_api_key.Delete` sets status=`archived` — neither is hard-deletion. Document this in resource docstrings rather than papering over it.
 
 ## Open questions / TODOs
 

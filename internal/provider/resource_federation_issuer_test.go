@@ -21,21 +21,21 @@ func TestAccFederationIssuer_discovery(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: fmt.Sprintf(`
-resource "anthropic_federation_issuer" "gh" {
+resource "claudeadmin_federation_issuer" "gh" {
   name       = %q
   issuer_url = "https://token.actions.githubusercontent.com"
   jwks_type  = "discovery"
 }
 `, name),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("anthropic_federation_issuer.gh", "name", name),
-					resource.TestCheckResourceAttr("anthropic_federation_issuer.gh", "issuer_url", "https://token.actions.githubusercontent.com"),
-					resource.TestCheckResourceAttr("anthropic_federation_issuer.gh", "jwks_type", "discovery"),
-					resource.TestCheckResourceAttrSet("anthropic_federation_issuer.gh", "id"),
+					resource.TestCheckResourceAttr("claudeadmin_federation_issuer.gh", "name", name),
+					resource.TestCheckResourceAttr("claudeadmin_federation_issuer.gh", "issuer_url", "https://token.actions.githubusercontent.com"),
+					resource.TestCheckResourceAttr("claudeadmin_federation_issuer.gh", "jwks_type", "discovery"),
+					resource.TestCheckResourceAttrSet("claudeadmin_federation_issuer.gh", "id"),
 				),
 			},
 			{
-				ResourceName:      "anthropic_federation_issuer.gh",
+				ResourceName:      "claudeadmin_federation_issuer.gh",
 				ImportState:       true,
 				ImportStateVerify: true,
 				// max_jwt_lifetime_seconds + check_jti get filled by API defaults;
@@ -58,7 +58,7 @@ func TestAccFederationIssuer_inlineJWKS(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: fmt.Sprintf(`
-resource "anthropic_federation_issuer" "inline" {
+resource "claudeadmin_federation_issuer" "inline" {
   name           = %q
   issuer_url     = "https://example.invalid/issuer"
   jwks_type      = "inline"
@@ -66,8 +66,8 @@ resource "anthropic_federation_issuer" "inline" {
 }
 `, name),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("anthropic_federation_issuer.inline", "jwks_type", "inline"),
-					resource.TestCheckResourceAttrSet("anthropic_federation_issuer.inline", "id"),
+					resource.TestCheckResourceAttr("claudeadmin_federation_issuer.inline", "jwks_type", "inline"),
+					resource.TestCheckResourceAttrSet("claudeadmin_federation_issuer.inline", "id"),
 				),
 			},
 		},
