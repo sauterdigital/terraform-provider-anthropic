@@ -20,7 +20,7 @@ The Admin API requires an **admin API key** (`x-api-key`) distinct from regular 
 
 Feature-complete v0.1: full Admin API surface, validators on every enum, retry/backoff for 429, generated docs, unit tests, acceptance test scaffolding, and CI. `go build ./... && go vet ./... && gofmt -l . && go test -race ./...` all green; `terraform fmt -check -recursive examples/` clean. Not yet validated against the live Admin API — acceptance tests require `TF_ACC=1` + `ANTHROPIC_ADMIN_API_KEY` and have not been executed.
 
-### Resources (15)
+### Resources (16)
 
 Admin API key compatible:
 
@@ -46,8 +46,9 @@ Admin API key compatible:
 | `claudeadmin_federation_rule_workspace` | Extends a rule to an additional workspace. Composite id. |
 | `claudeadmin_tunnel_certificate` | MCP tunnel CA cert (beta, `anthropic-beta: mcp-tunnels-2026-06-22` added automatically). Uses `/v1/tunnels` (public API). |
 | `claudeadmin_tunnel_token_rotation` | Declarative token rotation. Change `rotation_id` to trigger a new rotation; fresh `tunnel_token` becomes the sensitive output. |
+| `claudeadmin_compliance_content_deletion` | Hard-deletes user content (chat, chat_file, chat_generated_file, project, project_document) for eDiscovery / DLP / LGPD-GDPR erasure. Requires Compliance Access Key with scope `delete:compliance_user_data`. One-way. |
 
-### Data sources (44)
+### Data sources (48)
 
 Identity & membership: `claudeadmin_organization`, `claudeadmin_workspace[s]`, `claudeadmin_workspace_member[s]`, `claudeadmin_organization_member[s]`, `claudeadmin_invite[s]`.
 
@@ -65,13 +66,15 @@ Service accounts (Bearer auth): `claudeadmin_service_account[s]`, `claudeadmin_s
 
 MCP Tunnels (Bearer + beta): `claudeadmin_tunnel[s]`, `claudeadmin_tunnel_certificates`, `claudeadmin_tunnel_token`.
 
-Compliance API (dedicated `compliance_api_key`, Enterprise): `claudeadmin_compliance_activities`, `claudeadmin_compliance_organizations`, `claudeadmin_compliance_organization_users`, `claudeadmin_compliance_organization_roles`, `claudeadmin_compliance_groups`, `claudeadmin_compliance_group_members`, `claudeadmin_compliance_organization_settings`.
+Compliance API — **directory + activity metadata** (`compliance_api_key`, Enterprise): `claudeadmin_compliance_activities`, `claudeadmin_compliance_organizations`, `claudeadmin_compliance_organization_users`, `claudeadmin_compliance_organization_roles`, `claudeadmin_compliance_groups`, `claudeadmin_compliance_group_members`, `claudeadmin_compliance_organization_settings`.
+
+Compliance Content API — **user-generated content** for eDiscovery / DLP (same `compliance_api_key` but requires scope `read:compliance_user_data` / `delete:compliance_user_data`, Enterprise): `claudeadmin_compliance_chats`, `claudeadmin_compliance_chat_messages`, `claudeadmin_compliance_projects`, `claudeadmin_compliance_project_attachments`.
 
 The FinOps reports + analytics v2 + CMEK + spend limits + service accounts + federation are the **headline differentiation** vs `terraform-mars/terraform-provider-anthropic`, which covers only workspaces, api_keys, workspace_members, and invites.
 
 ### Coverage vs Admin API docs
 
-We cover **every** endpoint group documented at https://platform.claude.com/docs/en/api/admin, plus Compliance API (`/v1/compliance/*`) as of v0.3.0. The client supports three auth modes (x-api-key admin, Bearer OAuth, x-api-key compliance); endpoints that reject Admin API keys (Service Accounts, Federation, MCP Tunnels) check `Client.HasOAuth()` upfront and return `ErrOAuthRequired`. Compliance endpoints check `Client.HasCompliance()` and return `ErrComplianceRequired`. MCP Tunnels endpoints automatically attach the `anthropic-beta: mcp-tunnels-2026-06-22` header via `WithBetaHeaders`. Audit Logs are NOT in the Admin API (confirmed via doc audit on 2026-06-10).
+We cover **every** endpoint group documented at https://platform.claude.com/docs/en/api/admin, plus Compliance API directory (`/v1/compliance/*`) and Compliance Content API (`/v1/compliance/apps/*`) as of v0.5.0. The client supports three auth modes (x-api-key admin, Bearer OAuth, x-api-key compliance); endpoints that reject Admin API keys (Service Accounts, Federation, MCP Tunnels) check `Client.HasOAuth()` upfront and return `ErrOAuthRequired`. Compliance endpoints check `Client.HasCompliance()` and return `ErrComplianceRequired`. MCP Tunnels endpoints automatically attach the `anthropic-beta: mcp-tunnels-2026-06-22` header via `WithBetaHeaders`. Audit Logs are NOT in the Admin API (confirmed via doc audit on 2026-06-10).
 
 Doc-noted limitations we accept:
 - `claudeadmin_spend_limit` only accepts `scope.type=user` for writes; seat-tier / rbac_group / organization-service / organization-level limits remain Console-only.

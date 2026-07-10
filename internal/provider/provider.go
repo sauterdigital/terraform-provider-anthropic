@@ -133,6 +133,7 @@ func (p *AnthropicProvider) Resources(_ context.Context) []func() resource.Resou
 		NewFederationRuleWorkspaceResource,
 		NewTunnelCertificateResource,
 		NewTunnelTokenRotationResource,
+		NewComplianceContentDeletionResource,
 	}
 }
 
@@ -183,5 +184,9 @@ func (p *AnthropicProvider) DataSources(_ context.Context) []func() datasource.D
 		NewComplianceGroupsDataSource,
 		NewComplianceGroupMembersDataSource,
 		NewComplianceOrganizationSettingsDataSource,
+		NewComplianceChatsDataSource,
+		NewComplianceChatMessagesDataSource,
+		NewComplianceProjectsDataSource,
+		NewComplianceProjectAttachmentsDataSource,
 	}
 }
